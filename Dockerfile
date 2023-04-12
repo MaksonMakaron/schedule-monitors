@@ -1,5 +1,4 @@
-# этап сборки (build stage)
-FROM node as build-stage
+FROM node as builder
 RUN git clone https://github.com/MaksonMakaron/schedule-monitors app
 WORKDIR /app
 COPY package*.json ./
@@ -8,8 +7,9 @@ COPY . .
 RUN npm run build
 
 
-# этап production (production-stage)
-FROM nginx:stable-alpine as production-stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html
-EXPOSE 80
+FROM nginx
+COPY nginx.conf /etc/nginx/nginx.conf
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 3000 80
 CMD ["nginx", "-g", "daemon off;"]
